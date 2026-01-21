@@ -1,0 +1,52 @@
+.Design {
+    /* position: relative; */
+    /* left: 750px; */
+    /* top: 150px; */
+    height: 600px;
+    width: 450px;
+    border: .5px solid rgb(224, 215, 215);
+    border-radius: 2px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: white;
+}
+
+.Sidebar {
+    padding: 30px;
+    height: fit-content;
+    width: 500px;
+    color: white;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    ;
+}
+
+.Sidebar>h1{
+    font-size: 27px;
+    margin-bottom: 23px;
+}
+
+.Sidebar>h2{
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 140px;
+}
+
+
+
+.Container {
+     border-radius: 3px;
+    position: relative;
+    top: 177px;
+    left: 581px;
+    display: flex;
+    flex-direction: row;
+    width: 40vw;
+    height: fit-content;
+    background-color:rgba(40, 116, 240);
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, .08);
+}
+
