@@ -6,8 +6,8 @@ import { AxiosError } from "axios";
 
 interface RegisterPayload {
   username: string;
-  email: string;
-  password: string;
+  useremail: string;
+  userpassword: string;
   role: string;
 }
 
@@ -41,6 +41,7 @@ export const registerUserThunk = createAsyncThunk(
   async (data: RegisterPayload, { rejectWithValue }) => {
     try {
       const res = await axios.post(`${API_URL}/auth/register`, data);
+      console.log(res.data)
       return res.data;
     } catch (error: unknown) {
       if (error instanceof AxiosError) {

@@ -105,7 +105,7 @@ export default function Login() {
 
   return (
     <>
-      <Image src={NavLogo} width={2100} alt="Navbar" />
+      <Image src={NavLogo} width={2200} alt="Navbar" />
 
       <div className="Container">
         <div className="Sidebar">

@@ -37,20 +37,20 @@ import { registerUserThunk, resetAuthState } from "../../redux/authSlice";
 const RegisterUserSchema = z
   .object({
     username: z.string().min(4, "Username should be of minimum 4 characters"),
-    email: z.string().email("Invalid email"),
+    useremail: z.string().email("Invalid email"),
     role: z.string().min(1, "Role is required"),
-    password: z
+    userpassword: z
       .string()
       .min(8, "Password must be at least 8 characters")
       .refine((val) => !val.includes(" "), {
         message: "Password must not contain spaces",
       }),
-    cpassword: z.string().min(8, "Confirm Password is required"),
+    // cpassword: z.string().min(8, "Confirm Password is required"),
   })
-  .refine((data) => data.password === data.cpassword, {
-    path: ["cpassword"],
-    message: "Passwords do not match",
-  });
+  // .refine((data) => data.userpassword === data.cpassword, {
+  //   path: ["cpassword"],
+  //   message: "Passwords do not match",
+  // });
 
 type RegisterFormData = z.infer<typeof RegisterUserSchema>;
 
@@ -72,20 +72,19 @@ export default function Register() {
     reset,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterUserSchema),
-    mode: "onChange",
     defaultValues: {
       role: "",
     },
   });
 
   const handleRegister = (data: RegisterFormData) => {
-    const { username, email, password, role } = data;
-
+    const { username, useremail, userpassword, role } = data;
+console.log(data)
     dispatch(
       registerUserThunk({
         username,
-        email,
-        password,
+        useremail,
+        userpassword,
         role,
       })
     );
@@ -106,8 +105,8 @@ export default function Register() {
       dispatch(
         registerUserThunk({
           username,
-          email,
-          password: "12345678",
+          useremail: email,
+          userpassword: "12345678",
           role: "User",
         })
       );
@@ -115,10 +114,11 @@ export default function Register() {
       setSnackbarOpen(true);
     }
   };
+  
 
   useEffect(() => {
     if (success || error) {
-    //   setSnackbarOpen(true);
+      setSnackbarOpen(true);
     }
 
     if (success) {
@@ -133,7 +133,7 @@ export default function Register() {
 
   return (
     <>
-      <Image src={NavLogo} width={2100} alt="Navbar" />
+      <Image src={NavLogo} width={2200} alt="Navbar" />
 
       <div className="Container">
         <div className="Sidebar">
@@ -164,17 +164,17 @@ export default function Register() {
               sx={{ mb: 2 }}
               fullWidth
               label="Email Address"
-              {...register("email")}
-              error={!!errors.email}
-              helperText={errors.email?.message}
+              {...register("useremail")}
+              error={!!errors.useremail}
+              helperText={errors.useremail?.message}
             />
 
-            <FormControl fullWidth error={!!errors.password}>
+            <FormControl fullWidth error={!!errors.userpassword}>
               <InputLabel>Password</InputLabel>
               <OutlinedInput
                 sx={{ mb: 2 }}
                 type={showPassword ? "text" : "password"}
-                {...register("password")}
+                {...register("userpassword")}
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
@@ -185,7 +185,7 @@ export default function Register() {
                   </InputAdornment>
                 }
               />
-              <FormHelperText>{errors.password?.message}</FormHelperText>
+              <FormHelperText>{errors.userpassword?.message}</FormHelperText>
             </FormControl>
 
 
