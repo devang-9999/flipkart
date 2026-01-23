@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Snackbar from "@mui/material/Snackbar";
 import "./login.css";
-import NavLogo from "../../../public/Screenshot from 2026-01-21 14-41-06.png";
+// import NavLogo from "../../../public/Screenshot from 2026-01-21 14-41-06.png";
 
 import {
   Button,
@@ -32,9 +32,8 @@ import { auth, provider } from "../../firebase/firebase";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   loginUserThunk,
-  registerUserThunk,
-  resetAuthState,
 } from "../../redux/authSlice";
+import FlipkartHeader from "@/app/components/FlipkartHeader";
 
 const LoginSchema = z.object({
   email: z.string().email("Email is invalid"),
@@ -72,7 +71,6 @@ export default function Login() {
       const result = await signInWithPopup(auth, provider);
 
       const email = result.user.email;
-      const username = result.user.displayName || "google_user";
 
       if (!email) {
         setSnackbarOpen(true);
@@ -105,8 +103,8 @@ export default function Login() {
 
   return (
     <>
-      <Image src={NavLogo} width={2200} alt="Navbar" />
-
+      {/* <Image src={NavLogo} width={2200} alt="Navbar" /> */}
+    <FlipkartHeader/>
       <div className="Container">
         <div className="Sidebar">
           <h1>Login</h1>

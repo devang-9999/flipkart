@@ -33,6 +33,7 @@ import { auth, provider } from "../../firebase/firebase";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { registerUserThunk, resetAuthState } from "../../redux/authSlice";
+import FlipkartHeader from "@/app/components/FlipkartHeader";
 
 const RegisterUserSchema = z
   .object({
@@ -45,12 +46,8 @@ const RegisterUserSchema = z
       .refine((val) => !val.includes(" "), {
         message: "Password must not contain spaces",
       }),
-    // cpassword: z.string().min(8, "Confirm Password is required"),
   })
-  // .refine((data) => data.userpassword === data.cpassword, {
-  //   path: ["cpassword"],
-  //   message: "Passwords do not match",
-  // });
+
 
 type RegisterFormData = z.infer<typeof RegisterUserSchema>;
 
@@ -118,7 +115,7 @@ console.log(data)
 
   useEffect(() => {
     if (success || error) {
-      setSnackbarOpen(true);
+      // setSnackbarOpen(true);
     }
 
     if (success) {
@@ -133,8 +130,8 @@ console.log(data)
 
   return (
     <>
-      <Image src={NavLogo} width={2200} alt="Navbar" />
-
+      {/* <Image src={NavLogo} width={2200} alt="Navbar" /> */}
+    <FlipkartHeader/>
       <div className="Container">
         <div className="Sidebar">
           <h1>Looks like you are new here!</h1>
