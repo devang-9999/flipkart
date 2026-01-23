@@ -91,12 +91,12 @@ export default function Login() {
 
   useEffect(() => {
     if (success || error) {
-      // setSnackbarOpen(true);
+      setSnackbarOpen(true);
     }
 
     if (success) {
       reset();
-      setTimeout(() => router.push("/"), 500);
+      setTimeout(() => router.push("/dashboard"), 500);
     }
 
   }, [success, error, dispatch, reset, router]);

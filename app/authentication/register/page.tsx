@@ -12,7 +12,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
 import "./register.css";
-import NavLogo from "../../../public/Screenshot from 2026-01-21 14-41-06.png";
+// import NavLogo from "../../../public/Screenshot from 2026-01-21 14-41-06.png";
 
 import {
   Button,
@@ -40,7 +40,7 @@ const RegisterUserSchema = z
     username: z.string().min(4, "Username should be of minimum 4 characters"),
     useremail: z.string().email("Invalid email"),
     role: z.string().min(1, "Role is required"),
-    userpassword: z
+    userPassword: z
       .string()
       .min(8, "Password must be at least 8 characters")
       .refine((val) => !val.includes(" "), {
@@ -75,13 +75,13 @@ export default function Register() {
   });
 
   const handleRegister = (data: RegisterFormData) => {
-    const { username, useremail, userpassword, role } = data;
+    const { username, useremail, userPassword, role } = data;
 console.log(data)
     dispatch(
       registerUserThunk({
         username,
         useremail,
-        userpassword,
+        userPassword,
         role,
       })
     );
@@ -103,7 +103,7 @@ console.log(data)
         registerUserThunk({
           username,
           useremail: email,
-          userpassword: "12345678",
+          userPassword: "12345678",
           role: "User",
         })
       );
@@ -115,7 +115,7 @@ console.log(data)
 
   useEffect(() => {
     if (success || error) {
-      // setSnackbarOpen(true);
+      setSnackbarOpen(true);
     }
 
     if (success) {
@@ -166,12 +166,12 @@ console.log(data)
               helperText={errors.useremail?.message}
             />
 
-            <FormControl fullWidth error={!!errors.userpassword}>
+            <FormControl fullWidth error={!!errors.userPassword}>
               <InputLabel>Password</InputLabel>
               <OutlinedInput
                 sx={{ mb: 2 }}
                 type={showPassword ? "text" : "password"}
-                {...register("userpassword")}
+                {...register("userPassword")}
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
@@ -182,7 +182,7 @@ console.log(data)
                   </InputAdornment>
                 }
               />
-              <FormHelperText>{errors.userpassword?.message}</FormHelperText>
+              <FormHelperText>{errors.userPassword?.message}</FormHelperText>
             </FormControl>
 
 
@@ -197,10 +197,7 @@ console.log(data)
                   displayEmpty
                   sx={{ width: "400px" }}
                 >
-                  <MenuItem value="">
-                    <em>Select Role</em>
-                  </MenuItem>
-                  <MenuItem value="User">User</MenuItem>
+                  <MenuItem value="User"> <em>User</em></MenuItem>
                   <MenuItem value="Seller">Seller</MenuItem>
                 </Select>
               )}

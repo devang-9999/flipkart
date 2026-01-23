@@ -7,7 +7,7 @@ import { AxiosError } from "axios";
 interface RegisterPayload {
   username: string;
   useremail: string;
-  userpassword: string;
+  userPassword: string;
   role: string;
 }
 

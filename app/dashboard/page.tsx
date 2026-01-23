@@ -72,7 +72,7 @@ const debouncedSearch = useDebounce(search, 600);
   return (
     <>
 
-    <AppBar position="static" sx={{ backgroundColor: "#2874f0", boxShadow: "none" }} component="div">
+    <AppBar sx={{ backgroundColor: "#2874f0", boxShadow: "none" }}  component="div">
   <Toolbar sx={{ px: { xs: 2, md: 6 }, gap: 3,display:"flex",justifyContent:"space-between" }}>
 
     <Box
@@ -130,12 +130,13 @@ const debouncedSearch = useDebounce(search, 600);
       }}
     >
       <MenuItem value="">All Categories</MenuItem>
-      <MenuItem value="Electronics">Electronics</MenuItem>
+      <MenuItem value="Electronics">Electronics</MenuItem>  
       <MenuItem value="Fashion">Fashion</MenuItem>
       <MenuItem value="Grocery">Grocery</MenuItem>
     </Select>
+<div>
 
-    <Button
+  <Button
       variant="contained"
       sx={{
         backgroundColor: "white",
@@ -150,29 +151,32 @@ const debouncedSearch = useDebounce(search, 600);
 
     <Button
       color="inherit"
-      sx={{ textTransform: "none" ,fontSize:"20px"}}
+      sx={{ textTransform: "none" ,fontSize:"20px" , ml:3}}
       onClick={() => router.push("/authentication/login")}
     >
       Logout
     </Button>
+</div>
+    
   </Toolbar>
 </AppBar>
 
 <Box
   sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(4, 1fr)",
-    },
+    display: "flex",
+    flexDirection:"row",
     gap: 3,
     padding: 3,
+ marginTop:"80px"
   }}
 >
-  {products.map((product: Product) => (
+  
+  {products && products.map((product: Product) => (
     <Card key={product.id}>
       <CardContent>
+        <div style={{textAlign:"center"}}>
+        <img src={product.images[0]} alt="Product Image" style={{width:"200px" , height:"200px"}}/>
+        </div>
         <Typography variant="h6">{product.name}</Typography>
         <Typography>₹{product.price}</Typography>
         <Typography variant="body2">

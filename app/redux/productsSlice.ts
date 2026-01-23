@@ -4,7 +4,18 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { AxiosError } from "axios";
 
-const API_URL = "http://localhost:3001/products";
+const API_URL = "http://localhost:5000";
+
+interface ProductsPayload {
+   name: string,
+    description:string,
+    category: string,
+    price: number,
+    stock:number,
+    brand:string,
+    images:[string],
+}
+
 
 interface ProductsState {
   data: [];
@@ -27,7 +38,7 @@ export const fetchProductsThunk = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      let url = `${API_URL}?page=${params.page || 1}&limit=${params.limit || 20}`;
+      let url = `${API_URL}/products?page=${params.page || 1}&limit=${params.limit || 20}`;
 
       if (params.category) {
         url = `${API_URL}/search?category=${params.category}&page=${params.page || 1}&limit=${params.limit || 20}`;
@@ -44,6 +55,22 @@ export const fetchProductsThunk = createAsyncThunk(
         return rejectWithValue(error.response?.data?.message);
       }
       return rejectWithValue("Failed to fetch products");
+    }
+  }
+);
+
+export const addProductThunk = createAsyncThunk(
+  "products",
+  async (formData: ProductsPayload, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(`${API_URL}/products`, formData);
+      console.log(res.data);
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message || "Failed to add product");
+      }
+      return rejectWithValue("An unexpected error occurred");
     }
   }
 );
