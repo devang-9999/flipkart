@@ -13,51 +13,140 @@ interface ProductsPayload {
     price: number,
     stock:number,
     brand:string,
-    images:[string],
+    images:string[],
 }
-
 
 interface ProductsState {
   data: [];
+  productDetail: ProductsPayload | null;
   loading: boolean;
   error: string | null;
   total: number;
 }
 
+interface FetchProductsParams {
+  page: number;
+  limit: number;
+  searchTerm?: string;
+  category?: string;
+}
+
 const initialState: ProductsState = {
   data: [],
+  productDetail:null,
   loading: false,
   error: null,
   total: 0,
 };
 
+
 export const fetchProductsThunk = createAsyncThunk(
-  "products/fetch",
+  'products/fetch',
   async (
-    params: { page?: number; limit?: number; category?: string; name?: string },
+    {
+      page = 1,
+      limit = 20,
+      category,
+      searchTerm,
+    }: {
+      page?: number;
+      limit?: number;
+      category?: string;
+      searchTerm?: string;
+    },
     { rejectWithValue }
   ) => {
     try {
-      let url = `${API_URL}/products?page=${params.page || 1}&limit=${params.limit || 20}`;
+      let url = '';
+      const params: FetchProductsParams = {
+        page,
+        limit,
+      };
 
-      if (params.category) {
-        url = `${API_URL}/search?category=${params.category}&page=${params.page || 1}&limit=${params.limit || 20}`;
+      if (searchTerm && searchTerm.trim()) {
+        url = 'http://localhost:5000/products/searchInput';
+        params.searchTerm = searchTerm.trim();
       }
 
-      if (params.name) {
-        url += `&name=${params.name}`;
+        else if (category) {
+          url = 'http://localhost:5000/products/by-category';
+          params.category = category.trim().toUpperCase();
+        }
+
+      else {
+        url = 'http://localhost:5000/products';
       }
 
-      const res = await axios.get(url);
-      return res.data;
+      const response = await axios.get(url, { params });
+      return response.data;
     } catch (error) {
-      if (error instanceof AxiosError) {
-        return rejectWithValue(error.response?.data?.message);
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(
+          error.response?.data?.message || 'Failed to fetch products'
+        );
       }
-      return rejectWithValue("Failed to fetch products");
+      return rejectWithValue('Unexpected error occurred');
     }
   }
 );
+
+export const fetchProductByIdThunk = createAsyncThunk(
+  'products/fetchById',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/products/${id}`
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(
+          error.response?.data?.message || 'Failed to fetch product'
+        );
+      }
+      return rejectWithValue('Unexpected error occurred');
+    }
+  }
+);
+
+// export const searchProductsByNameThunk = createAsyncThunk(
+//   'products/search',
+//   async (
+//     {
+//       searchTerm,
+//       page = 1,
+//       limit = 14,
+//     }: {
+//       searchTerm: string;
+//       page?: number;
+//       limit?: number;
+//     },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const encodedSearchTerm = encodeURIComponent(searchTerm.trim());
+
+//       const response = await axios.get(
+//         `http://localhost:5000/products/searchInput`,
+//         {
+//           params: {
+//             searchTerm: encodedSearchTerm,
+//             page,
+//             limit,
+//           },
+//         }
+//       );
+
+//       return response.data;
+//     } catch (error ) {
+//        const err = error as AxiosError;
+//       return rejectWithValue(
+//         err.response?.data || 'Failed to search products'
+//       );
+//     }
+//   }
+// );
+
 
 export const addProductThunk = createAsyncThunk(
   "products",
@@ -83,6 +172,7 @@ const productsSlice = createSlice({
     builder
       .addCase(fetchProductsThunk.pending, (state) => {
         state.loading = true;
+        state.error=null; //not neccessarily important
       })
       .addCase(fetchProductsThunk.fulfilled, (state, action) => {
         state.loading = false;
@@ -90,6 +180,21 @@ const productsSlice = createSlice({
         state.total = action.payload.total;
       })
       .addCase(fetchProductsThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      }) 
+      
+      .addCase(fetchProductByIdThunk.pending, (state) => {
+        state.loading = true;
+        state.productDetail = null; //not neccessarily important
+        state.error=null;
+      })
+      .addCase(fetchProductByIdThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.productDetail = action.payload
+
+      })
+      .addCase(fetchProductByIdThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
