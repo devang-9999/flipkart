@@ -10,7 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Snackbar from "@mui/material/Snackbar";
 import "./login.css";
-// import NavLogo from "../../../public/Screenshot from 2026-01-21 14-41-06.png";
 
 import {
   Button,
@@ -26,29 +25,26 @@ import {
 
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../../firebase/firebase";
-
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  loginUserThunk,
-} from "../../redux/authSlice";
+import { loginUserThunk, resetAuthState } from "../../redux/authSlice";
 import FlipkartHeader from "@/app/components/FlipkartHeader";
 
 const LoginSchema = z.object({
   email: z.string().email("Email is invalid"),
-  password: z.string().min(8, "Password should be of 8 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type LoginFormData = z.infer<typeof LoginSchema>;
 
 export default function Login() {
   const dispatch = useAppDispatch();
-  const { loading, success, error, message } = useAppSelector(
-    (state) => state.auth
-  );
-
   const router = useRouter();
+
+const { loading, success, error, message, user } = useAppSelector(
+  (state) => state.auth
+);
+
+
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -66,49 +62,32 @@ export default function Login() {
     dispatch(loginUserThunk(data));
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-
-      const email = result.user.email;
-
-      if (!email) {
-        setSnackbarOpen(true);
-        return;
-      }
-
-      dispatch(
-  loginUserThunk({
-    email,
-    password: "12345678",
-  })
-);
-
-    } catch {
-      setSnackbarOpen(true);
-    }
-  };
-
   useEffect(() => {
-    if (success || error) {
-      setSnackbarOpen(true);
-    }
+  if (success && user) {
+    reset();
 
-    if (success) {
-      reset();
-      setTimeout(() => router.push("/dashboard"), 500);
-    }
+    setTimeout(() => {
+      if (user.role === "Admin") {
+        router.push("/admin");
+      } else if (user.role === "Seller") {
+        router.push("/seller-dashboard");
+      } else {
+        router.push("/dashboard");
+      }
+    }, 300);
+  }
+}, [success, user, reset, router]);
 
-  }, [success, error, dispatch, reset, router]);
 
   return (
     <>
-      {/* <Image src={NavLogo} width={2200} alt="Navbar" /> */}
-    <FlipkartHeader/>
+      <FlipkartHeader />
+
       <div className="Container">
         <div className="Sidebar">
           <h1>Login</h1>
           <h2>Get access to your Orders, Wishlist and Recommendations</h2>
+
           <Image
             src={flipkart}
             alt="Flipkart"
@@ -177,23 +156,14 @@ export default function Login() {
                 Create an account
               </Link>
             </Typography>
-
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              onClick={handleGoogleLogin}
-            >
-              Login with Google
-            </Button>
           </form>
         </div>
 
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={6000}
+          autoHideDuration={4000}
           onClose={() => setSnackbarOpen(false)}
-          message={message || error || "Google login failed"}
+          message={message || error}
         />
       </div>
     </>

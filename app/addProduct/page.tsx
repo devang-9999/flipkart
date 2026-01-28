@@ -3,10 +3,12 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Typography } from "@mui/material";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import FlipkartHeader from "@/app/components/FlipkartHeader";
-import { useAppDispatch } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { addProductThunk } from "../redux/productsSlice";
 
 import "./addProduct.css";
@@ -20,11 +22,11 @@ const AddProductSchema = z.object({
   brand: z.string().min(1, "Brand is required"),
   stock: z.coerce.number().int().nonnegative("Stock cannot be negative"),
   images: z
-  .string()
-  .optional()
-  .transform((val) =>
-    val ? val.split(",").map((img) => img.trim()) : []
-  ),
+    .string()
+    .optional()
+    .transform((val) =>
+      val ? val.split(",").map((img) => img.trim()) : []
+    ),
 });
 
 type ProductFormData = z.infer<typeof AddProductSchema>;
@@ -32,6 +34,20 @@ type ProductFormData = z.infer<typeof AddProductSchema>;
 
 export default function AddProducts() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const { user } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/authentication/login");
+      return;
+    }
+
+    if (user.role !== "Seller") {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   const {
     register,
@@ -48,7 +64,19 @@ export default function AddProducts() {
   const handleAddProducts = (data: ProductFormData) => {
     dispatch(addProductThunk(data));
     reset();
+    router.push("/seller-dashboard"); 
   };
+
+  if (!user || user.role !== "Seller") {
+    return (
+      <>
+        <FlipkartHeader />
+        <Typography sx={{ p: 4 }}>
+          Redirecting...
+        </Typography>
+      </>
+    );
+  }
 
   return (
     <>
@@ -121,7 +149,6 @@ export default function AddProducts() {
             error={!!errors.images}
             helperText={errors.images?.message}
           />
-
 
           <Button
             type="submit"

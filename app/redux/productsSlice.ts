@@ -7,14 +7,19 @@ import { AxiosError } from "axios";
 const API_URL = "http://localhost:5000";
 
 interface ProductsPayload {
-   name: string,
-    description:string,
-    category: string,
-    price: number,
-    stock:number,
-    brand:string,
-    images:string[],
+  name: string,
+  description: string,
+  category: string,
+  price: number,
+  stock: number,
+  brand: string,
+  images: string[],
 }
+
+interface SellerProduct extends ProductsPayload {
+  id: number;
+}
+
 
 interface ProductsState {
   data: [];
@@ -22,6 +27,7 @@ interface ProductsState {
   loading: boolean;
   error: string | null;
   total: number;
+  myProducts: SellerProduct[]
 }
 
 interface FetchProductsParams {
@@ -33,11 +39,71 @@ interface FetchProductsParams {
 
 const initialState: ProductsState = {
   data: [],
-  productDetail:null,
+  productDetail: null,
   loading: false,
   error: null,
   total: 0,
+  myProducts: [],
 };
+
+
+export const getMyProductsThunk = createAsyncThunk(
+  "products/getMyProducts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        `${API_URL}/products/my-products`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(
+          error.response?.data?.message || "Failed to fetch seller products"
+        );
+      }
+      return rejectWithValue("Unexpected error");
+    }
+  }
+);
+
+export const updateProductBySellerThunk = createAsyncThunk(
+  "products/updateBySeller",
+  async (
+    { id, data }: { id: number; data: Partial<ProductsPayload> },
+    { rejectWithValue }
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.patch(
+        `${API_URL}/products/${id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(
+          error.response?.data?.message || "Failed to update product"
+        );
+      }
+      return rejectWithValue("Unexpected error");
+    }
+  }
+);
 
 
 export const fetchProductsThunk = createAsyncThunk(
@@ -68,10 +134,10 @@ export const fetchProductsThunk = createAsyncThunk(
         params.searchTerm = searchTerm.trim();
       }
 
-        else if (category) {
-          url = 'http://localhost:5000/products/by-category';
-          params.category = category.trim().toUpperCase();
-        }
+      else if (category) {
+        url = 'http://localhost:5000/products/by-category';
+        params.category = category.trim().toUpperCase();
+      }
 
       else {
         url = 'http://localhost:5000/products';
@@ -149,20 +215,31 @@ export const fetchProductByIdThunk = createAsyncThunk(
 
 
 export const addProductThunk = createAsyncThunk(
-  "products",
+  "products/add",
   async (formData: ProductsPayload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/products`, formData);
-      console.log(res.data);
+      const token = localStorage.getItem("token");
+
+      const res = await axios.post(
+        `${API_URL}/products`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       return res.data;
     } catch (error) {
       if (error instanceof AxiosError) {
-        return rejectWithValue(error.response?.data?.message || "Failed to add product");
+        return rejectWithValue(error.response?.data?.message);
       }
-      return rejectWithValue("An unexpected error occurred");
+      return rejectWithValue("Unexpected error");
     }
   }
 );
+
 
 const productsSlice = createSlice({
   name: "products",
@@ -172,7 +249,7 @@ const productsSlice = createSlice({
     builder
       .addCase(fetchProductsThunk.pending, (state) => {
         state.loading = true;
-        state.error=null; //not neccessarily important
+        state.error = null; //not neccessarily important
       })
       .addCase(fetchProductsThunk.fulfilled, (state, action) => {
         state.loading = false;
@@ -182,12 +259,12 @@ const productsSlice = createSlice({
       .addCase(fetchProductsThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      }) 
-      
+      })
+
       .addCase(fetchProductByIdThunk.pending, (state) => {
         state.loading = true;
         state.productDetail = null; //not neccessarily important
-        state.error=null;
+        state.error = null;
       })
       .addCase(fetchProductByIdThunk.fulfilled, (state, action) => {
         state.loading = false;
@@ -197,6 +274,26 @@ const productsSlice = createSlice({
       .addCase(fetchProductByIdThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(getMyProductsThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMyProductsThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myProducts = action.payload;
+      })
+      .addCase(getMyProductsThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(updateProductBySellerThunk.fulfilled, (state, action) => {
+        const index = state.myProducts.findIndex(
+          (p) => p.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.myProducts[index] = action.payload;
+        }
       });
   },
 });
