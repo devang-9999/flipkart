@@ -9,6 +9,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import "./login.css";
 
 import {
@@ -27,7 +28,6 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { loginUserThunk, resetAuthState } from "../../redux/authSlice";
-import FlipkartHeader from "@/app/components/FlipkartHeader";
 
 const LoginSchema = z.object({
   email: z.string().email("Email is invalid"),
@@ -40,13 +40,15 @@ export default function Login() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-const { loading, success, error, message, user } = useAppSelector(
-  (state) => state.auth
-);
-
+  const { loading, success, error, message, user } = useAppSelector(
+    (state) => state.auth
+  );
 
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<"success" | "error">("success");
 
   const {
     register,
@@ -63,26 +65,37 @@ const { loading, success, error, message, user } = useAppSelector(
   };
 
   useEffect(() => {
-  if (success && user) {
-    reset();
+    if (error) {
+      setSnackbarMessage(error);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
 
-    setTimeout(() => {
-      if (user.role === "Admin") {
-        router.push("/admin");
-      } else if (user.role === "Seller") {
-        router.push("/seller-dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    }, 300);
-  }
-}, [success, user, reset, router]);
+    if (success && user) {
+      setSnackbarMessage(message || "Login successful");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
 
+      reset();
+
+      setTimeout(() => {
+        if (user.role === "Admin") {
+          router.push("/admin");
+        } else if (user.role === "Seller") {
+          router.push("/seller-dashboard");
+        } else {
+          router.push("/dashboard");
+        }
+      }, 800);
+    }
+
+    return () => {
+      dispatch(resetAuthState());
+    };
+  }, [success, error, message, user, router, reset, dispatch]);
 
   return (
     <>
-      <FlipkartHeader />
-
       <div className="Container">
         <div className="Sidebar">
           <h1>Login</h1>
@@ -163,8 +176,16 @@ const { loading, success, error, message, user } = useAppSelector(
           open={snackbarOpen}
           autoHideDuration={4000}
           onClose={() => setSnackbarOpen(false)}
-          message={message || error}
-        />
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </div>
     </>
   );

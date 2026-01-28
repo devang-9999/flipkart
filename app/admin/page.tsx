@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 import {
   Box,
   Typography,
@@ -10,44 +9,34 @@ import {
   CardContent,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { fetchUsersThunk } from "../redux/adminSlice";
 
-const API_URL = "http://localhost:5000";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import {
+  fetchUsersThunk,
+  toggleBlockUserThunk,
+} from "../redux/adminSlice";
 
 export default function AdminPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-
-  const fetchUsers = async () => {
-    const res = await axios.get(`${API_URL}/auth/admin/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    setUsers(res.data);
-  };
-
-  const toggleBlock = async (id: number) => {
-    await axios.patch(
-      `${API_URL}/auth/admin/block/${id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    fetchUsers();
-  };
+  const { users, loading } = useAppSelector(
+    (state) => state.admin
+  );
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    fetchUsersThunk();
-  }, []);
+    if (!user || user.role !== "Admin") {
+      router.push("/dashboard");
+      return;
+    }
+
+    dispatch(fetchUsersThunk()); 
+  }, [dispatch, user, router]);
+
+  if (loading) {
+    return <Typography sx={{ p: 4 }}>Loading...</Typography>;
+  }
 
   return (
     <Box sx={{ p: 4 }}>
@@ -55,30 +44,25 @@ export default function AdminPage() {
         Admin Dashboard
       </Typography>
 
-      {users.map((user) => (
-        <Card key={user.userid} sx={{ mb: 2 }}>
+      {users.map((u) => (
+        <Card key={u.userid} sx={{ mb: 2 }}>
           <CardContent>
+            <Typography><b>Name:</b> {u.username}</Typography>
+            <Typography><b>Email:</b> {u.useremail}</Typography>
+            <Typography><b>Role:</b> {u.role}</Typography>
             <Typography>
-              <b>Name:</b> {user.username}
-            </Typography>
-            <Typography>
-              <b>Email:</b> {user.useremail}
-            </Typography>
-            <Typography>
-              <b>Role:</b> {user.role}
-            </Typography>
-            <Typography>
-              <b>Status:</b>{" "}
-              {user.isBlocked ? "Blocked ❌" : "Active ✅"}
+              <b>Status:</b> {u.isBlocked ? "Blocked ❌" : "Active ✅"}
             </Typography>
 
             <Button
               sx={{ mt: 1 }}
-              color={user.isBlocked ? "success" : "error"}
               variant="contained"
-              onClick={() => toggleBlock(user.userid)}
+              color={u.isBlocked ? "success" : "error"}
+              onClick={() =>
+                dispatch(toggleBlockUserThunk(u.userid))
+              }
             >
-              {user.isBlocked ? "Unblock" : "Block"}
+              {u.isBlocked ? "Unblock" : "Block"}
             </Button>
           </CardContent>
         </Card>

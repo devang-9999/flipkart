@@ -11,8 +11,8 @@ import { useForm, Controller } from "react-hook-form";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import "./register.css";
-// import NavLogo from "../../../public/Screenshot from 2026-01-21 14-41-06.png";
 
 import {
   Button,
@@ -33,21 +33,18 @@ import { auth, provider } from "../../firebase/firebase";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { registerUserThunk, resetAuthState } from "../../redux/authSlice";
-import FlipkartHeader from "@/app/components/FlipkartHeader";
 
-const RegisterUserSchema = z
-  .object({
-    username: z.string().min(4, "Username should be of minimum 4 characters"),
-    useremail: z.string().email("Invalid email"),
-    role: z.string().min(1, "Role is required"),
-    userPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .refine((val) => !val.includes(" "), {
-        message: "Password must not contain spaces",
-      }),
-  })
-
+const RegisterUserSchema = z.object({
+  username: z.string().min(4, "Username should be of minimum 4 characters"),
+  useremail: z.string().email("Invalid email"),
+  role: z.string().min(1, "Role is required"),
+  userPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .refine((val) => !val.includes(" "), {
+      message: "Password must not contain spaces",
+    }),
+});
 
 type RegisterFormData = z.infer<typeof RegisterUserSchema>;
 
@@ -60,6 +57,9 @@ export default function Register() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<"success" | "error">("success");
 
   const {
     register,
@@ -75,14 +75,12 @@ export default function Register() {
   });
 
   const handleRegister = (data: RegisterFormData) => {
-    const { username, useremail, userPassword, role } = data;
-console.log(data)
     dispatch(
       registerUserThunk({
-        username,
-        useremail,
-        userPassword,
-        role,
+        username: data.username,
+        useremail: data.useremail,
+        userPassword: data.userPassword,
+        role: data.role,
       })
     );
   };
@@ -95,6 +93,8 @@ console.log(data)
       const username = result.user.displayName || "google_user";
 
       if (!email) {
+        setSnackbarMessage("Google sign up failed");
+        setSnackbarSeverity("error");
         setSnackbarOpen(true);
         return;
       }
@@ -108,34 +108,41 @@ console.log(data)
         })
       );
     } catch {
+      setSnackbarMessage("Google sign up failed");
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
   };
-  
 
   useEffect(() => {
-    if (success || error) {
+    if (error) {
+      setSnackbarMessage(error);
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
 
     if (success) {
+      setSnackbarMessage(message || "Registration successful");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
       reset();
-      setTimeout(() => router.push("/authentication/login"), 500);
+      setTimeout(() => {
+        router.push("/authentication/login");
+      }, 800);
     }
 
     return () => {
       dispatch(resetAuthState());
     };
-  }, [success, error, dispatch, reset, router]);
+  }, [success, error, message, dispatch, reset, router]);
 
   return (
     <>
-      {/* <Image src={NavLogo} width={2200} alt="Navbar" /> */}
-    <FlipkartHeader/>
       <div className="Container">
         <div className="Sidebar">
           <h1>Looks like you are new here!</h1>
-          <h2>Sign up with your mobile number to get started</h2>
+          <h2>Sign up to get started</h2>
 
           <Image
             src={flipkart}
@@ -185,8 +192,6 @@ console.log(data)
               <FormHelperText>{errors.userPassword?.message}</FormHelperText>
             </FormControl>
 
-
-
             <Controller
               name="role"
               control={control}
@@ -195,9 +200,13 @@ console.log(data)
                   {...field}
                   value={field.value ?? ""}
                   displayEmpty
-                  sx={{ width: "400px" }}
+                  fullWidth
+                  sx={{ mb: 2 }}
                 >
-                  <MenuItem value="User"> <em>User</em></MenuItem>
+                  <MenuItem value="">
+                    <em>Select Role</em>
+                  </MenuItem>
+                  <MenuItem value="User">User</MenuItem>
                   <MenuItem value="Seller">Seller</MenuItem>
                 </Select>
               )}
@@ -246,10 +255,18 @@ console.log(data)
 
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={6000}
+          autoHideDuration={5000}
           onClose={() => setSnackbarOpen(false)}
-          message={message || error || "Google sign up failed"}
-        />
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </div>
     </>
   );
